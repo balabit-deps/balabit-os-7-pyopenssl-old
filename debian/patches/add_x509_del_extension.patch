@@ -1,0 +1,84 @@
+--- a/OpenSSL/crypto/x509.c
++++ b/OpenSSL/crypto/x509.c
+@@ -957,6 +957,35 @@
+ }
+ 
+ 
++static char crypto_X509_del_extension_doc[] = "\n\
++Delete a specific extension of the certificate by index.\n\
++\n\
++:param index: The index of the extension to delete.\n\
++:return: None\n\
++";
++
++static PyObject *
++crypto_X509_del_extension(crypto_X509Obj *self, PyObject *args) {
++    int loc;
++    X509_EXTENSION *ext;
++
++    if (!PyArg_ParseTuple(args, "i:del_extension", &loc)) {
++        return NULL;
++    }
++
++    /* will return NULL if loc is out of the range of extensions */
++    ext = X509_delete_ext(self->x509, loc);
++    if (!ext) {
++        PyErr_SetString(PyExc_IndexError, "extension index out of bounds");
++	return NULL;
++    }
++
++    X509_EXTENSION_free(ext);
++
++    Py_INCREF(Py_None);
++    return Py_None;
++}
++
+ /*
+  * ADD_METHOD(name) expands to a correct PyMethodDef declaration
+  *   {  'name', (PyCFunction)crypto_X509_name, METH_VARARGS }
+@@ -993,6 +1022,7 @@
+     ADD_METHOD(get_extension_count),
+     ADD_METHOD(get_subject_alt_name),
+     ADD_METHOD_KW(verify),
++    ADD_METHOD(del_extension),
+     { NULL, NULL }
+ };
+ #undef ADD_METHOD
+--- a/OpenSSL/test/test_crypto.py
++++ b/OpenSSL/test/test_crypto.py
+@@ -1318,6 +1318,35 @@
+         self.assertRaises(TypeError, cert.get_extension, "hello")
+ 
+ 
++    def test_del_extension(self):
++        """
++        L(X509.del_extension) takes an integer and deletes the corresponding
++        L(X509Extension) at that index.
++        """
++        pkey = load_privatekey(FILETYPE_PEM, client_key_pem)
++        ca = X509Extension('basicConstraints', True, 'CA:FALSE')
++        key = X509Extension('keyUsage', True, 'digitalSignature')
++        subjectAltName = X509Extension(
++            'subjectAltName', True, 'DNS:example.com')
++
++        # Try to delete an extension from a cert with no extensions at all
++        c = self._extcert(pkey, [])
++        self.assertRaises(IndexError, c.del_extension, 0)
++
++        # Check that we can delete a single extension
++        c = self._extcert(pkey, [ca])
++        c.del_extension(0)
++        self.assertEqual(c.get_extension_count(), 0)
++
++        # Check that deleting the second extension also works
++        c = self._extcert(pkey, [ca, key, subjectAltName])
++        c.del_extension(1)
++        ext = c.get_extension(0)
++        self.assertEqual(ext.get_short_name(), 'basicConstraints')
++        ext = c.get_extension(1)
++        self.assertEqual(ext.get_short_name(), 'subjectAltName')
++
++
+     def test_invalid_digest_algorithm(self):
+         """
+         L{X509.digest} raises L{ValueError} if called with an unrecognized hash

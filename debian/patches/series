@@ -3,3 +3,4 @@ support_openssl_1.0
 add_x509_name_oneline.patch
 add_x509_subject_alt_name.patch
 add_x509_verify.patch
+add_x509_del_extension.patch
