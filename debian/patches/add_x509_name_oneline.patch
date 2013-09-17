@@ -1,0 +1,62 @@
+diff --git a/OpenSSL/crypto/x509name.c b/OpenSSL/crypto/x509name.c
+index 91f617a..0910a06 100644
+--- a/OpenSSL/crypto/x509name.c
++++ b/OpenSSL/crypto/x509name.c
+@@ -14,7 +14,7 @@
+ #define crypto_MODULE
+ #include "crypto.h"
+ 
+-static PyMethodDef crypto_X509Name_methods[4];
++static PyMethodDef crypto_X509Name_methods[5];
+ 
+ /*
+  * Constructor for X509Name, never called by Python code directly
+@@ -399,6 +399,32 @@ crypto_X509Name_get_components(crypto_X509NameObj *self, PyObject *args)
+ }
+ 
+ 
++static char crypto_X509Name_get_oneline_doc[] = "\n\
++Returns the oneline version of this name.\n\
++\n\
++Arguments: self - The X509 object\n\
++           args - The Python argument tuple, should be empty\n\
++Returns:   String.\n\
++";
++
++static PyObject *
++crypto_X509Name_get_oneline(crypto_X509NameObj *self, PyObject *args)
++{
++    char tmpbuf[512] = "";
++
++    if (X509_NAME_oneline(self->x509_name, tmpbuf, 512) == NULL)
++    {
++        exception_from_error_queue(crypto_Error);
++        return NULL;
++    }
++    else
++    {
++        return PyString_FromString(tmpbuf);
++    }
++
++}
++
++
+ /*
+  * Call the visitproc on all contained objects.
+  *
+@@ -451,6 +477,7 @@ crypto_X509Name_dealloc(crypto_X509NameObj *self)
+     PyObject_GC_Del(self);
+ }
+ 
++
+ /*
+  * ADD_METHOD(name) expands to a correct PyMethodDef declaration
+  *   {  'name', (PyCFunction)crypto_X509_name, METH_VARARGS }
+@@ -463,6 +490,7 @@ static PyMethodDef crypto_X509Name_methods[] =
+     ADD_METHOD(hash),
+     ADD_METHOD(der),
+     ADD_METHOD(get_components),
++    ADD_METHOD(get_oneline),
+     { NULL, NULL }
+ };
+ #undef ADD_METHOD

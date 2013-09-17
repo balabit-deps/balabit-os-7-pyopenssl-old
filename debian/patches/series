@@ -1,2 +1,3 @@
 10_fix_doc_buildsystem.patch
 support_openssl_1.0
+add_x509_name_oneline.patch
