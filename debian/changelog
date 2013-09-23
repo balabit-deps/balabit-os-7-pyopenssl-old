@@ -1,3 +1,16 @@
+pyopenssl (0.12-1ubuntu2.1) precise-security; urgency=low
+
+  * SECURITY UPDATE: incorrect ssl cert validation via NUL byte in
+    subjectAltName
+    - debian/patches/CVE-2013-4314.patch: fix leak in OpenSSL/crypto/x509.c,
+      properly handle subjectAltName in OpenSSL/crypto/x509ext.c, added
+      tests to OpenSSL/test/test_crypto.py.
+    - CVE-2013-4314
+  * debian/patches/remove_sslv2_test.patch: fix test suite failure by
+    removing SSLv2 in test_method as openssl in precise doesn't enable it.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 23 Sep 2013 10:00:40 -0400
+
 pyopenssl (0.12-1ubuntu2) precise; urgency=low
 
   * Rebuild to drop python2.6 dependencies.

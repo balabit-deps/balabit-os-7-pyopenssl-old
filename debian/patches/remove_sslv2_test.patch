@@ -1,0 +1,18 @@
+Description: fix test suite failure by removing SSLv2 in test_method as
+ openssl in precise doesn't enable it.
+Author: Marc Deslauriers <marc.deslauriers@canonical.com>
+Forwarded: Not needed. Included in later versions.
+
+Index: pyopenssl-0.12/OpenSSL/test/test_ssl.py
+===================================================================
+--- pyopenssl-0.12.orig/OpenSSL/test/test_ssl.py	2013-09-20 15:46:31.719533577 -0400
++++ pyopenssl-0.12/OpenSSL/test/test_ssl.py	2013-09-23 10:00:28.768972016 -0400
+@@ -184,7 +184,7 @@
+         L{Context} can be instantiated with one of L{SSLv2_METHOD},
+         L{SSLv3_METHOD}, L{SSLv23_METHOD}, or L{TLSv1_METHOD}.
+         """
+-        for meth in [SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD]:
++        for meth in [SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD]:
+             Context(meth)
+         self.assertRaises(TypeError, Context, "")
+         self.assertRaises(ValueError, Context, 10)
