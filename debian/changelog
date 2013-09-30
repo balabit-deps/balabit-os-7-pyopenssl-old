@@ -1,3 +1,9 @@
+pyopenssl (0.12-1ubuntu2bb50.1) zorpos50; urgency=low
+
+  * Importing patches from ZorpOS 4.0
+
+ -- Laszlo Attila Toth <panther@balabit.hu>  Mon, 30 Sep 2013 15:40:00 +0200
+
 pyopenssl (0.12-1ubuntu2) precise; urgency=low
 
   * Rebuild to drop python2.6 dependencies.
