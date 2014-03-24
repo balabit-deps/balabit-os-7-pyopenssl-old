@@ -25,7 +25,9 @@ case "$cmd" in
 	prepare-dist)
 		;;
 	bootstrap)
-		QUILT_PATCHES=debian/patches quilt push -a
+		# quilt returns with rc=2 if it does nothing because patches were already applied
+		QUILT_PATCHES=debian/patches quilt push -a || $(
+			if [[ $? == 2 ]]; then exit 0; else exit $?; fi)
 		;;
 	configure)
 		echo "No need to configure"
