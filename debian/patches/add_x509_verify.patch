@@ -1,6 +1,8 @@
---- a/OpenSSL/crypto/x509.c
-+++ b/OpenSSL/crypto/x509.c
-@@ -859,6 +859,106 @@
+Index: pyopenssl/OpenSSL/crypto/x509.c
+===================================================================
+--- pyopenssl.orig/OpenSSL/crypto/x509.c	2014-04-25 13:27:35.726170552 +0200
++++ pyopenssl/OpenSSL/crypto/x509.c	2014-04-25 13:27:35.722170527 +0200
+@@ -860,6 +860,106 @@
  }
  
  
@@ -107,7 +109,7 @@
  
  /*
   * ADD_METHOD(name) expands to a correct PyMethodDef declaration
-@@ -867,6 +967,8 @@
+@@ -868,6 +968,8 @@
   */
  #define ADD_METHOD(name)        \
      { #name, (PyCFunction)crypto_X509_##name, METH_VARARGS, crypto_X509_##name##_doc }
@@ -116,7 +118,7 @@
  static PyMethodDef crypto_X509_methods[] =
  {
      ADD_METHOD(get_version),
-@@ -893,9 +995,11 @@
+@@ -894,9 +996,11 @@
      ADD_METHOD(get_extension),
      ADD_METHOD(get_extension_count),
      ADD_METHOD(get_subject_alt_name),
@@ -128,9 +130,11 @@
  
  
  /*
---- a/OpenSSL/test/test_crypto.py
-+++ b/OpenSSL/test/test_crypto.py
-@@ -846,8 +846,13 @@
+Index: pyopenssl/OpenSSL/test/test_crypto.py
+===================================================================
+--- pyopenssl.orig/OpenSSL/test/test_crypto.py	2014-04-25 13:27:35.726170552 +0200
++++ pyopenssl/OpenSSL/test/test_crypto.py	2014-04-25 13:27:35.722170527 +0200
+@@ -891,8 +891,13 @@
          key.generate_key(TYPE_RSA, 512)
          request.set_pubkey(key)
          request.sign(key, 'MD5')

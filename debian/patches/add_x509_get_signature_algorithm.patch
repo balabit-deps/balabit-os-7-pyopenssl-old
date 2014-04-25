@@ -1,5 +1,7 @@
---- a/OpenSSL/crypto/x509.c
-+++ b/OpenSSL/crypto/x509.c
+Index: pyopenssl/OpenSSL/crypto/x509.c
+===================================================================
+--- pyopenssl.orig/OpenSSL/crypto/x509.c	2014-04-25 13:28:02.410341324 +0200
++++ pyopenssl/OpenSSL/crypto/x509.c	2014-04-25 13:28:02.406341299 +0200
 @@ -521,6 +521,41 @@
      return Py_None;
  }
@@ -42,7 +44,7 @@
  static char crypto_X509_sign_doc[] = "\n\
  Sign the certificate using the supplied key and digest\n\
  \n\
-@@ -1016,6 +1051,7 @@
+@@ -1017,6 +1052,7 @@
      ADD_METHOD(set_notAfter),
      ADD_METHOD(gmtime_adj_notBefore),
      ADD_METHOD(gmtime_adj_notAfter),

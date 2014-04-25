@@ -5,8 +5,10 @@
 ## DP:  add subjaltname
 
 @DPATCH@
---- a/OpenSSL/crypto/x509.c
-+++ b/OpenSSL/crypto/x509.c
+Index: pyopenssl/OpenSSL/crypto/x509.c
+===================================================================
+--- pyopenssl.orig/OpenSSL/crypto/x509.c	2014-04-25 13:27:23.442093743 +0200
++++ pyopenssl/OpenSSL/crypto/x509.c	2014-04-25 13:27:23.438093718 +0200
 @@ -11,6 +11,8 @@
   * Reviewed 2001-07-23
   */
@@ -16,7 +18,7 @@
  #define crypto_MODULE
  #include "crypto.h"
  #include "x509ext.h"
-@@ -732,6 +734,132 @@
+@@ -733,6 +735,132 @@
      return (PyObject*)extobj;
  }
  
@@ -149,7 +151,7 @@
  /*
   * ADD_METHOD(name) expands to a correct PyMethodDef declaration
   *   {  'name', (PyCFunction)crypto_X509_name, METH_VARARGS }
-@@ -764,6 +892,7 @@
+@@ -765,6 +893,7 @@
      ADD_METHOD(add_extensions),
      ADD_METHOD(get_extension),
      ADD_METHOD(get_extension_count),

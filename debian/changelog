@@ -1,3 +1,10 @@
+pyopenssl (0.12-1ubuntu2.1bb50.1) UNRELEASED; urgency=low
+
+  * (Re)Added bb suffix to the version
+  * Refreshed quilt patches
+
+ -- SZALAY Attila <sasa@debian.org>  Fri, 25 Apr 2014 13:16:30 +0200
+
 pyopenssl (0.12-1ubuntu2.1) precise-security; urgency=low
 
   * SECURITY UPDATE: incorrect ssl cert validation via NUL byte in
