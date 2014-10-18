@@ -4,7 +4,7 @@ set -e
 if [[ -x $ZWA_INSTALL_DIR/bin/python ]]; then
   PYTHON=$ZWA_INSTALL_DIR/bin/python
 else
-  PYTHON=python
+  PYTHON=python2
 fi
 
 export DEV_INSTALL_DIR=$ZWA_INSTALL_DIR
@@ -34,12 +34,12 @@ case "$cmd" in
 		;;
 	make)
 		if [[ $# -gt 0 && "X$1" == Xinstall ]]; then
-			PYTHON_VERSION_MAJOR=[`python -c "import sys; print '%d' % (sys.version_info[0]);"`]
-			PYTHON_VERSION_MINOR=[`python -c "import sys; print '%d' % (sys.version_info[1]);"`]
+			PYTHON_VERSION_MAJOR=[`$PYTHON -c "import sys; print '%d' % (sys.version_info[0]);"`]
+			PYTHON_VERSION_MINOR=[`$PYTHON -c "import sys; print '%d' % (sys.version_info[1]);"`]
 			PYTHON_VERSION="${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
-			python setup.py install --prefix $ZWA_INSTALL_DIR
+			$PYTHON setup.py install --prefix $ZWA_INSTALL_DIR
 		elif [[ $# -gt 0 && "X$1" == Xclean ]]; then
-			python setup.py clean
+			$PYTHON setup.py clean
 		else
 			echo "Try make install instead of $1 $@"
 		fi
