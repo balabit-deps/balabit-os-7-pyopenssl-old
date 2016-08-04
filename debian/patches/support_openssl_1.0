@@ -95,26 +95,6 @@ Index: pyopenssl-0.12/OpenSSL/ssl/context.c
  static char ssl_Context_load_verify_locations_doc[] = "\n\
  Let SSL know where we can find trusted certificates for the certificate\n\
  chain\n\
-@@ -1107,11 +1118,19 @@
-  */
- static ssl_ContextObj*
- ssl_Context_init(ssl_ContextObj *self, int i_method) {
-+#if (OPENSSL_VERSION_NUMBER >> 28) == 0x01
-+    const
-+#endif
-     SSL_METHOD *method;
- 
-     switch (i_method) {
-         case ssl_SSLv2_METHOD:
-+#ifdef OPENSSL_NO_SSL2
-+            PyErr_SetString(PyExc_ValueError, "SSLv2_METHOD not supported by this version of OpenSSL");
-+            return NULL;
-+#else      
-             method = SSLv2_method();
-+#endif
-             break;
-         case ssl_SSLv23_METHOD:
-             method = SSLv23_method();
 Index: pyopenssl-0.12/OpenSSL/test/test_crypto.py
 ===================================================================
 --- pyopenssl-0.12.orig/OpenSSL/test/test_crypto.py	2011-05-30 13:57:31.000000000 +0200
