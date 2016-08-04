@@ -15,7 +15,7 @@ Package: python-openssl
 Architecture: any
 Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
 Provides: ${python:Provides}
-Suggests: python-openssl-doc, python-openssl-dbg
+Suggests: python-openssl-dbg
 XB-Python-Version: ${python:Versions}
 Description: Python wrapper around the OpenSSL library
  High-level wrapper around a subset of the OpenSSL library, includes
@@ -28,25 +28,6 @@ Description: Python wrapper around the OpenSSL library
  .
  A lot of the object methods do nothing more than calling a
  corresponding function in the OpenSSL library.
-
-Package: python-openssl-doc
-Section: doc
-Architecture: all
-Depends: ${misc:Depends}
-Suggests: python-openssl
-Description: Python wrapper around the OpenSSL library (documentation package)
- High-level wrapper around a subset of the OpenSSL library, includes
- .
-   * SSL.Connection objects, wrapping the methods of Python's portable
-     sockets
-   * Callbacks written in Python
-   * Extensive error-handling mechanism, mirroring OpenSSL's error
-     codes
- .
- A lot of the object methods do nothing more than calling a
- corresponding function in the OpenSSL library.
- .
- This package contains documentation for python-openssl.
 
 Package: python-openssl-dbg
 Priority: extra
