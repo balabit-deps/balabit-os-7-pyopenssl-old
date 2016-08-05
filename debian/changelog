@@ -1,5 +1,13 @@
-pyopenssl (0.12-1ubuntu2.1bb50.1) UNRELEASED; urgency=low
+pyopenssl (0.12-1ubuntu2.1bb50.xenial1) xenial; urgency=medium
 
+  [ op@localhost ]
+  * Disable the doc target, to allow to build on xenial
+
+ --  <op@localhost>  Mon, 08 Aug 2016 10:42:35 +0200
+
+pyopenssl (0.12-1ubuntu2.1bb50.1) zorpos50; urgency=low
+
+  [ SZALAY Attila ]
   * (Re)Added bb suffix to the version
   * Refreshed quilt patches
 
