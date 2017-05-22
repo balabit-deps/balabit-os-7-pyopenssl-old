@@ -1,3 +1,9 @@
+pyopenssl-old (0.12-1ubuntu2.1bb50.xenial3) xenial; urgency=medium
+
+  * Balabit patched version
+
+ -- Balabit Platform Team <devnull@dev.null>  Mon, 22 May 2017 17:16:18 +0200
+
 pyopenssl (0.12-1ubuntu2.1bb50.xenial1) xenial; urgency=medium
 
   [ op@localhost ]
