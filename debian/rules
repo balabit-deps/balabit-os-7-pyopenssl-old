@@ -50,12 +50,12 @@ install: build
 	set -e; \
 	for py in $(PYVERS); do \
 	    echo "installing for python$$py ..."; \
- 	    python$$py setup.py install --root=$(CURDIR)/debian/python-openssl --install-layout=deb; \
+ 	    python$$py setup.py install --root=$(CURDIR)/debian/python-openssl-old --install-layout=deb; \
 	    echo "installing for python$$py-dbg ..."; \
-	    python$$py-dbg setup.py install --root=$(CURDIR)/debian/python-openssl-dbg --install-layout=deb; \
+	    python$$py-dbg setup.py install --root=$(CURDIR)/debian/python-openssl-old-dbg --install-layout=deb; \
  	done
-	find debian/python-openssl-dbg ! -type d ! -name '*_d.so' | xargs rm -f
-	find debian/python-openssl-dbg -depth -empty -exec rmdir {} \;
+	find debian/python-openssl-old-dbg ! -type d ! -name '*_d.so' | xargs rm -f
+	find debian/python-openssl-old-dbg -depth -empty -exec rmdir {} \;
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -78,7 +78,7 @@ binary-arch: build install
 	dh_testroot -a
 	dh_installexamples -a
 	dh_installchangelogs ChangeLog -a
-	dh_strip -ppython-openssl --dbg-package=python-openssl-dbg
+	dh_strip -ppython-openssl-old --dbg-package=python-openssl-old-dbg
 	dh_compress -a
 	dh_fixperms -a
 	dh_python2 -a

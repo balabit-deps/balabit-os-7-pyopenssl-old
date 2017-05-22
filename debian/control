@@ -1,4 +1,4 @@
-Source: pyopenssl
+Source: pyopenssl-old
 Section: python
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
@@ -11,11 +11,12 @@ Vcs-Svn: svn://svn.debian.org/python-modules/packages/pyopenssl/trunk/
 Vcs-Browser: http://svn.debian.org/viewsvn/python-modules/packages/pyopenssl/trunk/
 XS-Python-Version: all
 
-Package: python-openssl
+Package: python-openssl-old
 Architecture: any
 Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Conflicts: python-openssl
 Provides: ${python:Provides}
-Suggests: python-openssl-dbg
+Suggests: python-openssl-old-dbg
 XB-Python-Version: ${python:Versions}
 Description: Python wrapper around the OpenSSL library
  High-level wrapper around a subset of the OpenSSL library, includes
@@ -29,11 +30,11 @@ Description: Python wrapper around the OpenSSL library
  A lot of the object methods do nothing more than calling a
  corresponding function in the OpenSSL library.
 
-Package: python-openssl-dbg
+Package: python-openssl-old-dbg
 Priority: extra
 Section: debug
 Architecture: any
-Depends: ${misc:Depends}, python-openssl (= ${binary:Version}), python-dbg, ${shlibs:Depends}
+Depends: ${misc:Depends}, python-openssl-old (= ${binary:Version}), python-dbg, ${shlibs:Depends}
 Description: Python wrapper around the OpenSSL library (debug extension)
  High-level wrapper around a subset of the OpenSSL library, includes
  .
@@ -46,4 +47,4 @@ Description: Python wrapper around the OpenSSL library (debug extension)
  A lot of the object methods do nothing more than calling a
  corresponding function in the OpenSSL library.
  .
- This package contains the debug extension for python-openssl.
+ This package contains the debug extension for python-openssl-old.
