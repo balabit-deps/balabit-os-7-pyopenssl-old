@@ -39,8 +39,8 @@ static PyObject *
 crypto_PKey_generate_key(crypto_PKeyObj *self, PyObject *args)
 {
     int type, bits;
-    RSA *rsa;
-    DSA *dsa;
+    RSA *rsa = NULL;
+    DSA *dsa = NULL;
 
     if (!PyArg_ParseTuple(args, "ii:generate_key", &type, &bits))
         return NULL;
@@ -52,14 +52,23 @@ crypto_PKey_generate_key(crypto_PKeyObj *self, PyObject *args)
                 PyErr_SetString(PyExc_ValueError, "Invalid number of bits");
                 return NULL;
             }
-            if ((rsa = RSA_generate_key(bits, 0x10001, NULL, NULL)) == NULL)
+
+            rsa = RSA_new();
+
+	    BIGNUM *bne = BN_new();
+	    if (BN_set_word(bne, RSA_F4) != 1)
+		FAIL();
+            if ((RSA_generate_key_ex(rsa, bits, bne, NULL)) != 1)
                 FAIL();
+	    BN_free(bne);
+
             if (!EVP_PKEY_assign_RSA(self->pkey, rsa))
                 FAIL();
 	    break;
 
         case crypto_TYPE_DSA:
-            if ((dsa = DSA_generate_parameters(bits, NULL, 0, NULL, NULL, NULL, NULL)) == NULL)
+            dsa = DSA_new();
+            if ((DSA_generate_parameters_ex(dsa, bits, NULL, 0, NULL, NULL, NULL)) != 1)
                 FAIL();
             if (!DSA_generate_key(dsa))
                 FAIL();
@@ -104,7 +113,7 @@ crypto_PKey_type(crypto_PKeyObj *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":type"))
         return NULL;
 
-    return PyLong_FromLong(self->pkey->type);
+    return PyLong_FromLong(EVP_PKEY_id(self->pkey));
 }
 
 

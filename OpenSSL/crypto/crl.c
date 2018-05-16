@@ -19,7 +19,7 @@ crypto_CRL_get_revoked(crypto_CRLObj *self, PyObject *args) {
         return NULL;
     }
 
-    num_rev = sk_X509_REVOKED_num(self->crl->crl->revoked);
+    num_rev = sk_X509_REVOKED_num(X509_CRL_get_REVOKED(self->crl));
     if (num_rev < 0) {
         Py_INCREF(Py_None);
         return Py_None;
@@ -29,7 +29,7 @@ crypto_CRL_get_revoked(crypto_CRLObj *self, PyObject *args) {
     }
 
     for (j = 0; j < num_rev; j++) {
-        r = sk_X509_REVOKED_value(self->crl->crl->revoked, j);
+        r = sk_X509_REVOKED_value(X509_CRL_get_REVOKED(self->crl), j);
         r = X509_REVOKED_dup(r);
         if (r == NULL ) {
             goto error;

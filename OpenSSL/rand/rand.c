@@ -111,29 +111,6 @@ rand_screen(PyObject *spam, PyObject *args)
 }
 #endif
 
-static char rand_egd_doc[] = "\n\
-Query an entropy gathering daemon (EGD) for random data and add it to the\n\
-PRNG. I haven't found any problems when the socket is missing, the function\n\
-just returns 0.\n\
-\n\
-@param path: The path to the EGD socket\n\
-@param bytes: (optional) The number of bytes to read, default is 255\n\
-@returns: The number of bytes read (NB: a value of 0 isn't necessarily an\n\
-          error, check rand.status())\n\
-";
-
-static PyObject *
-rand_egd(PyObject *spam, PyObject *args)
-{
-    char *path;
-    int bytes = 255;
-
-    if (!PyArg_ParseTuple(args, "s|i:egd", &path, &bytes))
-        return NULL;
-
-    return PyLong_FromLong((long)RAND_egd_bytes(path, bytes));
-}
-
 static char rand_cleanup_doc[] = "\n\
 Erase the memory used by the PRNG.\n\
 \n\
@@ -245,7 +222,6 @@ static PyMethodDef rand_methods[] = {
 #ifdef MS_WINDOWS
     { "screen",    (PyCFunction)rand_screen,       METH_VARARGS, rand_screen_doc },
 #endif
-    { "egd",       (PyCFunction)rand_egd,          METH_VARARGS, rand_egd_doc },
     { "cleanup",   (PyCFunction)rand_cleanup,      METH_VARARGS, rand_cleanup_doc },
     { "load_file", (PyCFunction)rand_load_file,    METH_VARARGS, rand_load_file_doc },
     { "write_file",(PyCFunction)rand_write_file,   METH_VARARGS, rand_write_file_doc },

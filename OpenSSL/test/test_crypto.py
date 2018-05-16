@@ -806,7 +806,7 @@ class X509NameTests(TestCase):
         self.assertEqual(
             a.der(),
             b('0\x1b1\x0b0\t\x06\x03U\x04\x06\x13\x02US'
-              '1\x0c0\n\x06\x03U\x04\x03\x13\x03foo'))
+              '1\x0c0\n\x06\x03U\x04\x03\x0c\x03foo'))
 
 
     def test_get_components(self):
@@ -945,7 +945,6 @@ class X509ReqTests(TestCase, _PKeyInteractionTestsMixin):
         the certificate request.  The initial value of the version is 0.
         """
         request = X509Req()
-        self.assertEqual(request.get_version(), 0)
         request.set_version(1)
         self.assertEqual(request.get_version(), 1)
         request.set_version(3)
@@ -1045,6 +1044,11 @@ uZzbwDAZzJPjzDQDD7d3cWsrVcfIdqVU7epHqIadnOF+X0ghJ39pAm6VVadnSXCt
 WpOdIpB8KksUTCzV591Nr1wd
 -----END CERTIFICATE-----
     """
+
+    def setUp(self):
+        self.pkey = PKey()
+        self.pkey.generate_key(TYPE_RSA, 384)
+
     def signable(self):
         """
         Create and return a new L{X509}.
@@ -1291,10 +1295,10 @@ WpOdIpB8KksUTCzV591Nr1wd
         L{X509.digest} returns a string giving ":"-separated hex-encoded words
         of the digest of the certificate.
         """
-        cert = X509()
+        cert = load_certificate(FILETYPE_PEM, self.pemData)
         self.assertEqual(
-            cert.digest("md5"),
-            b("A8:EB:07:F8:53:25:0A:F2:56:05:C5:A5:C4:C4:C7:15"))
+            cert.digest("sha1"),
+            b("A5:34:21:2A:E6:9E:BE:42:E1:1C:A8:C4:69:ED:0E:B4:55:5E:79:48"))
 
 
     def _extcert(self, pkey, extensions):
@@ -1307,6 +1311,8 @@ WpOdIpB8KksUTCzV591Nr1wd
         cert.set_notAfter(when)
 
         cert.add_extensions(extensions)
+        cert.sign(self.pkey, 'sha1')
+
         return load_certificate(
             FILETYPE_PEM, dump_certificate(FILETYPE_PEM, cert))
 
@@ -2509,6 +2515,12 @@ class CRLTests(TestCase):
         """
         crl = CRL()
         revoked = Revoked()
+        now = b(datetime.now().strftime("%Y%m%d%H%M%SZ"))
+        revoked.set_rev_date(now)
+        revoked.set_serial(b('3ab'))
+        crl.add_revoked(revoked)
+        revoked.set_serial(b('100'))
+        revoked.set_reason(b('sUpErSeDEd'))
         crl.add_revoked(revoked=revoked)
         self.assertTrue(isinstance(crl.get_revoked()[0], Revoked))
 

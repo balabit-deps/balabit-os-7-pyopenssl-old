@@ -31,10 +31,9 @@ Return a list of all the supported reason strings.\n\
 static PyObject *
 crypto_Revoked_all_reasons(crypto_RevokedObj *self, PyObject *args) {
     PyObject *list, *str;
-    int j;
 
     list = PyList_New(0);
-    for (j = 0; j < NUM_REASONS; j++) {
+    for (unsigned long j = 0; j < NUM_REASONS; j++) {
         if(crl_reasons[j]) {
             str = PyBytes_FromString(crl_reasons[j]);
             PyList_Append(list, str);
@@ -59,9 +58,14 @@ X509_EXTENSION_value_to_PyString(X509_EXTENSION *ex) {
 
     /* These are not the droids you are looking for. */
     if (!X509V3_EXT_print(bio, ex, 0, 0)) {
-        if (M_ASN1_OCTET_STRING_print(bio, ex->value) == 0) {
+#if 0
+	//#define M_ASN1_OCTET_STRING_print(a, b)   ASN1_STRING_print(a,(ASN1_STRING *)b)
+	//http://docs.huihoo.com/doxygen/openssl/1.0.1c/crypto_2asn1_2asn1_8h.html
+        if (ASN1_STRING_print(bio, (ASN1_STRING *)ex->value) == 0) {
             goto err;
         }
+#endif /* 0 */
+	goto err;
     }
 
     /* Convert to a Python string. */
@@ -84,22 +88,16 @@ X509_EXTENSION_value_to_PyString(X509_EXTENSION *ex) {
 
 static void
 delete_reason(STACK_OF(X509_EXTENSION) *sk) {
-    X509_EXTENSION * ext;
     int j;
 
-    for (j = 0; j < sk_X509_EXTENSION_num(sk); j++) {
-         ext = sk_X509_EXTENSION_value(sk, j);
-         if (OBJ_obj2nid(ext->object) == NID_crl_reason) {
-             X509_EXTENSION_free(ext);
-             (void) sk_X509_EXTENSION_delete(sk, j);
-             break;
-         }
+    if ((j=X509v3_get_ext_by_NID(sk, NID_crl_reason, -1)) != -1) {
+        sk_X509_EXTENSION_delete(sk, j);
     }
 }
 
 static int
 reason_str_to_code(const char * reason_str) {
-    int reason_code = -1, j;
+    int reason_code = -1;
     char *spaceless_reason, * sp;
 
     /*  Remove spaces so that the responses of
@@ -112,7 +110,7 @@ reason_str_to_code(const char * reason_str) {
        memmove(sp, sp+1, strlen(sp));
     }
 
-    for (j = 0; j < NUM_REASONS; j++) {
+    for (unsigned long j = 0; j < NUM_REASONS; j++) {
         if(crl_reasons[j] && !strcasecmp(spaceless_reason, crl_reasons[j])) {
             reason_code = j;
             break;
@@ -144,7 +142,7 @@ crypto_Revoked_set_reason(crypto_RevokedObj *self, PyObject *args, PyObject *key
     }
 
     if(reason_str == NULL) {
-        delete_reason(self->revoked->extensions);
+        delete_reason(X509_REVOKED_get0_extensions(self->revoked));
         goto done;
     }
 
@@ -158,7 +156,7 @@ crypto_Revoked_set_reason(crypto_RevokedObj *self, PyObject *args, PyObject *key
     if (!rtmp || !ASN1_ENUMERATED_set(rtmp, reason_code)) {
         goto err;
     }
-    delete_reason(self->revoked->extensions);
+    delete_reason(X509_REVOKED_get0_extensions(self->revoked));
     if (!X509_REVOKED_add1_ext_i2d(self->revoked, NID_crl_reason, rtmp, 0, 0)) {
         goto err;
     }
@@ -182,18 +180,14 @@ static PyObject *
 crypto_Revoked_get_reason(crypto_RevokedObj *self, PyObject *args) {
     X509_EXTENSION * ext;
     int j;
-    STACK_OF(X509_EXTENSION) *sk = NULL;
 
     if (!PyArg_ParseTuple(args, ":get_reason")) {
         return NULL;
     }
 
-    sk = self->revoked->extensions;
-    for (j = 0; j < sk_X509_EXTENSION_num(sk); j++) {
-         ext = sk_X509_EXTENSION_value(sk, j);
-         if (OBJ_obj2nid(ext->object) == NID_crl_reason) {
-             return X509_EXTENSION_value_to_PyString(ext);
-         }
+    if ((j=X509_REVOKED_get_ext_by_NID(self->revoked, NID_crl_reason, -1)) != -1) {
+	    if ((ext=X509_REVOKED_get_ext(self->revoked, j)) != NULL)
+		return X509_EXTENSION_value_to_PyString(ext);
     }
 
     Py_INCREF(Py_None);
@@ -214,8 +208,9 @@ Retrieve the revocation date\n\
 static PyObject*
 crypto_Revoked_get_rev_date(crypto_RevokedObj *self, PyObject *args) {
     /* returns a borrowed reference.  */
-    return _get_asn1_time(
-        ":get_rev_date", self->revoked->revocationDate, args);
+    const ASN1_TIME *time = X509_REVOKED_get0_revocationDate(self->revoked);
+
+    return _get_asn1_time( ":get_rev_date", (ASN1_TIME *)time, args);
 }
 
 static char crypto_Revoked_set_rev_date_doc[] = "\n\
@@ -232,14 +227,17 @@ Set the revocation timestamp\n\
 
 static PyObject*
 crypto_Revoked_set_rev_date(crypto_RevokedObj *self, PyObject *args) {
-    return _set_asn1_time(
-        BYTESTRING_FMT ":set_rev_date", self->revoked->revocationDate, args);
+    const ASN1_TIME *time;
+
+    time = X509_REVOKED_get0_revocationDate(self->revoked);
+
+    return _set_asn1_time(BYTESTRING_FMT ":set_rev_date", (ASN1_TIME *)time, args);
 }
 
 /* The integer is converted to an upper-case hex string
  * without a '0x' prefix. */
 static PyObject *
-ASN1_INTEGER_to_PyString(ASN1_INTEGER *asn1_int) {
+ASN1_INTEGER_to_PyString(const ASN1_INTEGER *asn1_int) {
     BIO *bio = NULL;
     PyObject *str = NULL;
     int str_len;
@@ -286,12 +284,12 @@ crypto_Revoked_get_serial(crypto_RevokedObj *self, PyObject *args) {
         return NULL;
     }
 
-    if (self->revoked->serialNumber == NULL) {
+    if (X509_REVOKED_get0_serialNumber(self->revoked) == NULL) {
         /* never happens */
         Py_INCREF(Py_None);
         return Py_None;
     } else {
-        return ASN1_INTEGER_to_PyString(self->revoked->serialNumber);
+        return ASN1_INTEGER_to_PyString(X509_REVOKED_get0_serialNumber(self->revoked));
     }
 }
 

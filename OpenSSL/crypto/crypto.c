@@ -319,7 +319,7 @@ crypto_dump_certificate(PyObject *spam, PyObject *args)
             break;
 
         case X509_FILETYPE_TEXT:
-            ret = X509_print_ex(bio, cert->x509, 0, 0);
+            ret = X509_print_ex(bio, cert->x509, XN_FLAG_ONELINE, 0);
             break;
 
         default:
@@ -422,7 +422,7 @@ crypto_dump_certificate_request(PyObject *spam, PyObject *args)
             break;
 
         case X509_FILETYPE_TEXT:
-            ret = X509_REQ_print_ex(bio, req->x509_req, 0, 0);
+            ret = X509_REQ_print_ex(bio, req->x509_req, XN_FLAG_ONELINE, 0);
             break;
 
         default:
@@ -622,7 +622,6 @@ crypto_sign(PyObject *spam, PyObject *args) {
     int err;
     unsigned int sig_len;
     const EVP_MD *digest;
-    EVP_MD_CTX md_ctx;
     unsigned char sig_buf[512];
 
     if (!PyArg_ParseTuple(
@@ -636,10 +635,12 @@ crypto_sign(PyObject *spam, PyObject *args) {
         return NULL;
     }
 
-    EVP_SignInit(&md_ctx, digest);
-    EVP_SignUpdate(&md_ctx, data, strlen(data));
+    EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+    EVP_SignInit(md_ctx, digest);
+    EVP_SignUpdate(md_ctx, data, strlen(data));
     sig_len = sizeof(sig_buf);
-    err = EVP_SignFinal(&md_ctx, sig_buf, &sig_len, pkey->pkey);
+    err = EVP_SignFinal(md_ctx, sig_buf, &sig_len, pkey->pkey);
+    EVP_MD_CTX_free(md_ctx);
 
     if (err != 1) {
         exception_from_error_queue(crypto_Error);
@@ -668,7 +669,6 @@ crypto_verify(PyObject *spam, PyObject *args) {
     char *data, *digest_name;
     int err;
     const EVP_MD *digest;
-    EVP_MD_CTX md_ctx;
     EVP_PKEY *pkey;
 
 #ifdef PY3
@@ -690,10 +690,12 @@ crypto_verify(PyObject *spam, PyObject *args) {
         return NULL;
     }
 
-    EVP_VerifyInit(&md_ctx, digest);
-    EVP_VerifyUpdate(&md_ctx, data, strlen((char*)data));
-    err = EVP_VerifyFinal(&md_ctx, signature, sig_len, pkey);
+    EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+    EVP_VerifyInit(md_ctx, digest);
+    EVP_VerifyUpdate(md_ctx, data, strlen((char*)data));
+    err = EVP_VerifyFinal(md_ctx, signature, sig_len, pkey);
     EVP_PKEY_free(pkey);
+    EVP_MD_CTX_free(md_ctx);
 
     if (err != 1) {
         exception_from_error_queue(crypto_Error);
@@ -738,6 +740,8 @@ static PyThread_type_lock *mutex_buf = NULL;
  * Callback function supplied to OpenSSL to acquire or release a lock.
  *
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void locking_function(int mode, int n, const char * file, int line) {
     if (mode & CRYPTO_LOCK) {
         PyThread_acquire_lock(mutex_buf[n], WAIT_LOCK);
@@ -745,6 +749,7 @@ static void locking_function(int mode, int n, const char * file, int line) {
         PyThread_release_lock(mutex_buf[n]);
     }
 }
+#pragma GCC diagnostic pop
 
 
 /**

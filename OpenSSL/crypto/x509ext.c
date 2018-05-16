@@ -246,15 +246,21 @@ crypto_X509Extension_str_subjectAltName(crypto_X509ExtensionObj *self, BIO *bio)
     GENERAL_NAMES *names;
     const X509V3_EXT_METHOD *method = NULL;
     long i, length, num;
-    const unsigned char *p;
+    const unsigned char *p = NULL;
+    ASN1_OCTET_STRING *aos = NULL;
 
     method = X509V3_EXT_get(self->x509_extension);
     if (method == NULL) {
         return -1;
     }
 
-    p = self->x509_extension->value->data;
-    length = self->x509_extension->value->length;
+    aos = X509_EXTENSION_get_data(self->x509_extension);
+    if (aos == NULL) {
+      return -1;
+    }
+
+    p = ASN1_STRING_get0_data(aos);
+    length = ASN1_STRING_length(aos);
     if (method->it) {
         names = (GENERAL_NAMES*)(ASN1_item_d2i(NULL, &p, length,
                                                ASN1_ITEM_ptr(method->it)));
@@ -274,19 +280,19 @@ crypto_X509Extension_str_subjectAltName(crypto_X509ExtensionObj *self, BIO *bio)
             case GEN_EMAIL:
                 BIO_puts(bio, "email:");
                 as = name->d.rfc822Name;
-                BIO_write(bio, ASN1_STRING_data(as),
+                BIO_write(bio, ASN1_STRING_get0_data(as),
                           ASN1_STRING_length(as));
                 break;
             case GEN_DNS:
                 BIO_puts(bio, "DNS:");
                 as = name->d.dNSName;
-                BIO_write(bio, ASN1_STRING_data(as),
+                BIO_write(bio, ASN1_STRING_get0_data(as),
                           ASN1_STRING_length(as));
                 break;
             case GEN_URI:
                 BIO_puts(bio, "URI:");
                 as = name->d.uniformResourceIdentifier;
-                BIO_write(bio, ASN1_STRING_data(as),
+                BIO_write(bio, ASN1_STRING_get0_data(as),
                           ASN1_STRING_length(as));
                 break;
             default:
@@ -315,7 +321,7 @@ crypto_X509Extension_str(crypto_X509ExtensionObj *self) {
     PyObject *str;
     BIO *bio = BIO_new(BIO_s_mem());
 
-    if (OBJ_obj2nid(self->x509_extension->object) == NID_subject_alt_name) {
+    if (OBJ_obj2nid(X509_EXTENSION_get_object(self->x509_extension)) == NID_subject_alt_name) {
         if (crypto_X509Extension_str_subjectAltName(self, bio) == -1) {
             BIO_free(bio);
             exception_from_error_queue(crypto_Error);

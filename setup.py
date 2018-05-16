@@ -33,10 +33,6 @@ crypto_dep = ['OpenSSL/crypto/crypto.h', 'OpenSSL/crypto/x509.h',
               'OpenSSL/util.h']
 rand_src = ['OpenSSL/rand/rand.c', 'OpenSSL/util.c']
 rand_dep = ['OpenSSL/util.h']
-ssl_src = ['OpenSSL/ssl/connection.c', 'OpenSSL/ssl/context.c', 'OpenSSL/ssl/ssl.c',
-           'OpenSSL/util.c']
-ssl_dep = ['OpenSSL/ssl/connection.h', 'OpenSSL/ssl/context.h', 'OpenSSL/ssl/ssl.h',
-           'OpenSSL/util.h']
 
 IncludeDirs = None
 LibraryDirs = None
@@ -179,7 +175,7 @@ if os.name == 'nt' or sys.platform == 'win32':
 
 
 else:
-    Libraries = ['ssl', 'crypto']
+    Libraries = ['crypto']
     BuildExtension = build_ext
 
 
@@ -195,14 +191,12 @@ def mkExtension(name):
 setup(name='pyOpenSSL', version=__version__,
       packages = ['OpenSSL'],
       package_dir = {'OpenSSL': 'OpenSSL'},
-      ext_modules = [mkExtension('crypto'), mkExtension('rand'),
-                     mkExtension('SSL')],
+      ext_modules = [mkExtension('crypto'), mkExtension('rand')],
       py_modules  = ['OpenSSL.__init__', 'OpenSSL.tsafe',
                      'OpenSSL.version', 'OpenSSL.test.__init__',
                      'OpenSSL.test.util',
                      'OpenSSL.test.test_crypto',
-                     'OpenSSL.test.test_rand',
-                     'OpenSSL.test.test_ssl'],
+                     'OpenSSL.test.test_rand'],
       zip_safe = False,
       cmdclass = {"build_ext": BuildExtension},
       description = 'Python wrapper module around the OpenSSL library',

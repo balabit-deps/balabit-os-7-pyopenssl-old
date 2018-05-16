@@ -38,8 +38,8 @@ else:
     del orig, flags
 del sys
 
-from OpenSSL import rand, SSL
+from OpenSSL import rand
 from OpenSSL.version import __version__
 
 __all__ = [
-    'rand', 'crypto', 'SSL', 'tsafe', '__version__']
+    'rand', 'crypto', 'tsafe', '__version__']

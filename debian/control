@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Debian Python Modules Team <python-modules-team@lists.alioth.debian.org>
 Uploaders: Sandro Tosi <morph@debian.org>
-Build-Depends: debhelper (>= 5.0.37.2), python-all-dev (>= 2.6.6-3~), python-all-dbg (>= 2.5.4-1~), libssl-dev (>= 0.9.8), openssl
+Build-Depends: debhelper (>= 5.0.37.2), python-all-dev (>= 2.6.6-3~), python-all-dbg (>= 2.5.4-1~), libssl-dev (>= 1.1.0), openssl
 Standards-Version: 3.9.2
 Homepage: http://launchpad.net/pyopenssl
 Vcs-Svn: svn://svn.debian.org/python-modules/packages/pyopenssl/trunk/

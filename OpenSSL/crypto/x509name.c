@@ -342,9 +342,16 @@ crypto_X509Name_der(crypto_X509NameObj *self, PyObject *args)
 	return NULL;
     }
 
-    i2d_X509_NAME(self->x509_name, 0);
-    return PyBytes_FromStringAndSize(self->x509_name->bytes->data,
-                                     self->x509_name->bytes->length);
+    unsigned char *der = NULL;
+    int len = i2d_X509_NAME(self->x509_name, &der);
+    if (len < 0) {
+        return NULL;
+    }
+
+    PyObject *result = PyBytes_FromStringAndSize((const char *)der, len);
+    OPENSSL_free(der);
+
+    return result;
 }
 
 
@@ -382,7 +389,7 @@ crypto_X509Name_get_components(crypto_X509NameObj *self, PyObject *args)
 	fval = X509_NAME_ENTRY_get_data(ent);
 
 	l = ASN1_STRING_length(fval);
-	str = ASN1_STRING_data(fval);
+	str = (unsigned char *)ASN1_STRING_get0_data(fval);
 
 	nid = OBJ_obj2nid(fname);
 

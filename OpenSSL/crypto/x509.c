@@ -539,15 +539,13 @@ Retrieve the signature algorithm used in the certificate\n\
 
 static PyObject *
 crypto_X509_get_signature_algorithm(crypto_X509Obj *self, PyObject *args) {
-    ASN1_OBJECT *alg;
     int nid;
 
     if (!PyArg_ParseTuple(args, ":get_signature_algorithm")) {
         return NULL;
     }
 
-    alg = self->x509->cert_info->signature->algorithm;
-    nid = OBJ_obj2nid(alg);
+    nid = X509_get_signature_nid(self->x509);
     if (nid == NID_undef) {
         PyErr_SetString(PyExc_ValueError, "Undefined signature algorithm");
         return NULL;
@@ -820,19 +818,19 @@ crypto_X509_get_subject_alt_name(crypto_X509Obj *self, PyObject *args)
                 switch (gen_name->type)
                 {
                     case GEN_EMAIL:
-                        name = (char *)ASN1_STRING_data(gen_name->d.rfc822Name);
+                        name = (char *)ASN1_STRING_get0_data(gen_name->d.rfc822Name);
                         name_len = ASN1_STRING_length(gen_name->d.rfc822Name);
                         copy_name = 1;
                         break;
 
                     case GEN_DNS:
-                        name = (char *)ASN1_STRING_data(gen_name->d.dNSName);
+                        name = (char *)ASN1_STRING_get0_data(gen_name->d.dNSName);
                         name_len = ASN1_STRING_length(gen_name->d.dNSName);
                         copy_name = 1;
                         break;
 
                     case GEN_URI:
-                        name = (char *)ASN1_STRING_data(gen_name->d.uniformResourceIdentifier);
+                        name = (char *)ASN1_STRING_get0_data(gen_name->d.uniformResourceIdentifier);
                         name_len = ASN1_STRING_length(gen_name->d.uniformResourceIdentifier);
                         copy_name = 1;
                         break;
@@ -908,7 +906,7 @@ static PyObject *
 crypto_X509_verify(crypto_X509Obj *self, PyObject *args, PyObject *kwargs)
 {
     X509_STORE *store = NULL;
-    X509_STORE_CTX context;
+    X509_STORE_CTX *context = NULL;
     X509_VERIFY_PARAM *verify_param = NULL;
     PyObject *result = NULL;
 
@@ -984,12 +982,14 @@ crypto_X509_verify(crypto_X509Obj *self, PyObject *args, PyObject *kwargs)
         }
     }
 
-    X509_STORE_CTX_init(&context, store, self->x509, NULL);
-    X509_verify_cert(&context);
-    result = PyInt_FromLong(X509_STORE_CTX_get_error(&context));
+    context = X509_STORE_CTX_new();
+    X509_STORE_CTX_init(context, store, self->x509, NULL);
+    X509_verify_cert(context);
+    result = PyInt_FromLong(X509_STORE_CTX_get_error(context));
 
   free_and_return:
-    X509_STORE_CTX_cleanup(&context);
+    X509_STORE_CTX_cleanup(context);
+    X509_STORE_CTX_free(context);
     X509_VERIFY_PARAM_free(verify_param);
 
     return result;
