@@ -237,6 +237,15 @@ global_info_callback(const SSL *ssl, int where, int _ret)
     return;
 }
 
+/*
+ * More recent builds of OpenSSL may have SSLv2 completely disabled.
+ */
+#ifdef OPENSSL_NO_SSL2
+#define SSLv2_METHOD_TEXT ""
+#else
+#define SSLv2_METHOD_TEXT "SSLv2_METHOD, "
+#endif
+
 
 static char ssl_Context_doc[] = "\n\
 Context(method) -> Context instance\n\
@@ -244,9 +253,11 @@ Context(method) -> Context instance\n\
 OpenSSL.SSL.Context instances define the parameters for setting up new SSL\n\
 connections.\n\
 \n\
-@param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or\n\
+@param method: One of " SSLv2_METHOD_TEXT "SSLv3_METHOD, SSLv23_METHOD, or\n\
                TLSv1_METHOD.\n\
 ";
+
+#undef SSLv2_METHOD_TEXT
 
 static char ssl_Context_load_verify_locations_doc[] = "\n\
 Let SSL know where we can find trusted certificates for the certificate\n\

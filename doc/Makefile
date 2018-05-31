@@ -10,11 +10,11 @@ dvi ps text: pyOpenSSL.tex
 
 html: pyOpenSSL.tex
 	$(MKHOWTO) --html --iconserver . $^
-	-rm -rf html
-	mv pyOpenSSL html
+	-rm -rf html/
+	mkdir html/
+	mv *.html pyOpenSSL.css html/
 
 clean:
-	rm -rf html pyOpenSSL.dvi pyOpenSSL.ps pyOpenSSL.txt \
-	    pyOpenSSL.l2h pyOpenSSL.how
+	rm -rf html/ *.html pyOpenSSL.[0-9a-su-z]* pyOpenSSL.txt pyOpenSSL.tmp
 
 .PHONY: default all html dvi ps text clean
