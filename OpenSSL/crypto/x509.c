@@ -961,6 +961,35 @@ crypto_X509_verify(crypto_X509Obj *self, PyObject *args, PyObject *kwargs)
 }
 
 
+static char crypto_X509_del_extension_doc[] = "\n\
+Delete a specific extension of the certificate by index.\n\
+\n\
+:param index: The index of the extension to delete.\n\
+:return: None\n\
+";
+
+static PyObject *
+crypto_X509_del_extension(crypto_X509Obj *self, PyObject *args) {
+    int loc;
+    X509_EXTENSION *ext;
+
+    if (!PyArg_ParseTuple(args, "i:del_extension", &loc)) {
+        return NULL;
+    }
+
+    /* will return NULL if loc is out of the range of extensions */
+    ext = X509_delete_ext(self->x509, loc);
+    if (!ext) {
+        PyErr_SetString(PyExc_IndexError, "extension index out of bounds");
+	return NULL;
+    }
+
+    X509_EXTENSION_free(ext);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 /*
  * ADD_METHOD(name) expands to a correct PyMethodDef declaration
  *   {  'name', (PyCFunction)crypto_X509_name, METH_VARARGS }
@@ -997,6 +1026,7 @@ static PyMethodDef crypto_X509_methods[] =
     ADD_METHOD(get_extension_count),
     ADD_METHOD(get_subject_alt_name),
     ADD_METHOD_KW(verify),
+    ADD_METHOD(del_extension),
     { NULL, NULL }
 };
 #undef ADD_METHOD

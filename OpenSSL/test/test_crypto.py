@@ -1386,6 +1386,35 @@ WpOdIpB8KksUTCzV591Nr1wd
             b(str(ext)))
 
 
+    def test_del_extension(self):
+        """
+        L(X509.del_extension) takes an integer and deletes the corresponding
+        L(X509Extension) at that index.
+        """
+        pkey = load_privatekey(FILETYPE_PEM, client_key_pem)
+        ca = X509Extension('basicConstraints', True, 'CA:FALSE')
+        key = X509Extension('keyUsage', True, 'digitalSignature')
+        subjectAltName = X509Extension(
+            'subjectAltName', True, 'DNS:example.com')
+
+        # Try to delete an extension from a cert with no extensions at all
+        c = self._extcert(pkey, [])
+        self.assertRaises(IndexError, c.del_extension, 0)
+
+        # Check that we can delete a single extension
+        c = self._extcert(pkey, [ca])
+        c.del_extension(0)
+        self.assertEqual(c.get_extension_count(), 0)
+
+        # Check that deleting the second extension also works
+        c = self._extcert(pkey, [ca, key, subjectAltName])
+        c.del_extension(1)
+        ext = c.get_extension(0)
+        self.assertEqual(ext.get_short_name(), 'basicConstraints')
+        ext = c.get_extension(1)
+        self.assertEqual(ext.get_short_name(), 'subjectAltName')
+
+
     def test_invalid_digest_algorithm(self):
         """
         L{X509.digest} raises L{ValueError} if called with an unrecognized hash
