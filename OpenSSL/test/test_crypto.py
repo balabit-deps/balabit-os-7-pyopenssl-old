@@ -891,8 +891,13 @@ class _PKeyInteractionTestsMixin:
         key.generate_key(TYPE_RSA, 512)
         request.set_pubkey(key)
         request.sign(key, 'MD5')
+
         # If the type has a verify method, cover that too.
-        if getattr(request, 'verify', None) is not None:
+        # HACK: we've added a custom verify method to X509 that does
+        # not conform to the verify method of other types. Because of
+        # this we have to omit the X509 type from this test even if it
+        # has a 'verify' method.
+        if not isinstance(request, X509) and getattr(request, 'verify', None) is not None:
             pub = request.get_pubkey()
             self.assertTrue(request.verify(pub))
             # Make another key that won't verify.

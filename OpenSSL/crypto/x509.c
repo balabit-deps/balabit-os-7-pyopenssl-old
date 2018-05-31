@@ -860,6 +860,106 @@ crypto_X509_get_subject_alt_name(crypto_X509Obj *self, PyObject *args)
 }
 
 
+static char crypto_X509_verify_doc[] = "\n\
+Verify the certificate against the CA certificates and the CRL.\n\
+\n\
+@param files: None or list of CA certificate and CRL files\n\
+@param dirs: None or list of directories where CA certificates and CRLs will be sought\n\
+@param check_crls: True if CRLs should be checked (then at least one must exist) or False if not.\n\
+@return: 0 if the certificate is valid, otherwise an integer that is one of the X509_V_* macros in x509_vfy.h.\n\
+";
+
+static PyObject *
+crypto_X509_verify(crypto_X509Obj *self, PyObject *args, PyObject *kwargs)
+{
+    X509_STORE *store = NULL;
+    X509_STORE_CTX context;
+    X509_VERIFY_PARAM *verify_param = NULL;
+    PyObject *result = NULL;
+
+    int check_crls = 0;
+    PyObject *file_list = NULL;
+    PyObject *dir_list = NULL;
+
+    static char *kwlist[] = {"check_crls", "files", "dirs"};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|iOO", kwlist,
+				     &check_crls, &file_list, &dir_list))
+    {
+        return NULL;
+    }
+
+    if (file_list != NULL && !PySequence_Check(file_list)) {
+        PyErr_SetString(PyExc_TypeError, "files should be a list or it shouldn't be specified");
+	return NULL;
+    }
+
+    if (dir_list != NULL && !PySequence_Check(dir_list)) {
+        PyErr_SetString(PyExc_TypeError, "dirs should be a list or it shouldn't be specified");
+	return NULL;
+    }
+
+    store = X509_STORE_new();
+
+    /* enable checking all CRLs */
+    verify_param = X509_VERIFY_PARAM_new();
+    if (check_crls)
+        X509_VERIFY_PARAM_set_flags(verify_param, X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
+    X509_STORE_set1_param(store, verify_param);
+
+    /* load files */
+    if (file_list != NULL) {
+        int i;
+
+        for (i = 0; i < PySequence_Size(file_list); i++)
+        {
+            PyObject *item;
+            char *string;
+
+            item = PySequence_GetItem(file_list, i);
+            if (item == NULL)
+                goto free_and_return;     /* Exception was set. Also, this shouldn't happen. */
+
+            string = PyString_AsString(item);
+            if (string == NULL)
+                goto free_and_return;     /* Exception was set. */
+
+            X509_STORE_load_locations(store, string, NULL);
+        }
+    }
+
+    /* load directories */
+    if (dir_list != NULL) {
+        int i;
+
+        for (i = 0; i < PySequence_Size(dir_list); i++)
+        {
+            PyObject *item;;
+            char *string;
+
+            item = PySequence_GetItem(dir_list, i);
+            if (item == NULL)
+                goto free_and_return;     /* Exception was set. Also, this shouldn't happen. */
+
+            string = PyString_AsString(item);
+            if (string == NULL)
+                goto free_and_return;     /* Exception was set. */
+
+            X509_STORE_load_locations(store, NULL, string);
+        }
+    }
+
+    X509_STORE_CTX_init(&context, store, self->x509, NULL);
+    X509_verify_cert(&context);
+    result = PyInt_FromLong(X509_STORE_CTX_get_error(&context));
+
+  free_and_return:
+    X509_STORE_CTX_cleanup(&context);
+    X509_VERIFY_PARAM_free(verify_param);
+
+    return result;
+}
+
 
 /*
  * ADD_METHOD(name) expands to a correct PyMethodDef declaration
@@ -868,6 +968,8 @@ crypto_X509_get_subject_alt_name(crypto_X509Obj *self, PyObject *args)
  */
 #define ADD_METHOD(name)        \
     { #name, (PyCFunction)crypto_X509_##name, METH_VARARGS, crypto_X509_##name##_doc }
+#define ADD_METHOD_KW(name)     \
+    { #name, (PyCFunction)crypto_X509_##name, METH_VARARGS | METH_KEYWORDS, crypto_X509_##name##_doc }
 static PyMethodDef crypto_X509_methods[] =
 {
     ADD_METHOD(get_version),
@@ -894,9 +996,11 @@ static PyMethodDef crypto_X509_methods[] =
     ADD_METHOD(get_extension),
     ADD_METHOD(get_extension_count),
     ADD_METHOD(get_subject_alt_name),
+    ADD_METHOD_KW(verify),
     { NULL, NULL }
 };
 #undef ADD_METHOD
+#undef ADD_METHOD_KW
 
 
 /*
