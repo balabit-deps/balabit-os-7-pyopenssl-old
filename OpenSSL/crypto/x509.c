@@ -11,6 +11,8 @@
  * Reviewed 2001-07-23
  */
 #include <Python.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #define crypto_MODULE
 #include "crypto.h"
 #include "x509ext.h"
@@ -733,6 +735,132 @@ crypto_X509_get_extension(crypto_X509Obj *self, PyObject *args) {
     return (PyObject*)extobj;
 }
 
+
+static char crypto_X509_get_subject_alt_name_doc[] = "\n\
+Return the contents of the subjectAltName extension.\n\
+\n\
+Arguments: self - The X509 object\n\
+           args - The Python argument tuple, should be empty\n\
+Returns:   A list of (int type, str altname) pairs (tuples)\n\
+           or None if there's no subjectAltName extension.\n\
+";
+
+static PyObject *
+crypto_X509_get_subject_alt_name(crypto_X509Obj *self, PyObject *args)
+{
+    X509 *cert = self->x509;
+    int ext_ndx;
+    char *buf;
+
+    ext_ndx = X509_get_ext_by_NID(cert, NID_subject_alt_name, -1);
+    if (ext_ndx >= 0)
+    {
+        /* subjectAltName extension found */
+        X509_EXTENSION *ext;
+        STACK_OF(GENERAL_NAME) *alt_names;
+        GENERAL_NAME *gen_name;
+
+        ext = X509_get_ext(cert, ext_ndx);
+        alt_names = X509V3_EXT_d2i(ext);
+        if (alt_names)
+        {
+            int num;
+            int i;
+            PyObject *result;
+
+            num = sk_GENERAL_NAME_num(alt_names);
+            result = PyList_New(0);
+
+            for (i = 0; i < num; i++)
+            {
+                PyObject *tuple;
+                PyObject *pybuf;
+                char *name;
+                size_t name_len;
+                int copy_name = 0;    /* set to 1 if name should be copied into buf */
+
+                gen_name = sk_GENERAL_NAME_value(alt_names, i);
+
+                /* allocate buf and put a string representation of the name into it */
+                switch (gen_name->type)
+                {
+                    case GEN_EMAIL:
+                        name = (char *)ASN1_STRING_data(gen_name->d.rfc822Name);
+                        name_len = ASN1_STRING_length(gen_name->d.rfc822Name);
+                        copy_name = 1;
+                        break;
+
+                    case GEN_DNS:
+                        name = (char *)ASN1_STRING_data(gen_name->d.dNSName);
+                        name_len = ASN1_STRING_length(gen_name->d.dNSName);
+                        copy_name = 1;
+                        break;
+
+                    case GEN_URI:
+                        name = (char *)ASN1_STRING_data(gen_name->d.uniformResourceIdentifier);
+                        name_len = ASN1_STRING_length(gen_name->d.uniformResourceIdentifier);
+                        copy_name = 1;
+                        break;
+
+                    case GEN_IPADD:
+                        buf = malloc(16);   /* ###.###.###.###\0 is 16 characters */
+                        inet_ntop(AF_INET, gen_name->d.iPAddress->data, buf, 16);
+                        break;
+
+                    default:
+                        /* unsupported type -- ignore this entry */
+                        continue;
+                }
+
+                if (copy_name)
+                {
+                    buf = malloc(name_len);
+                    if (buf == NULL)
+                    {
+                        PyErr_SetString(PyExc_MemoryError, "Could not allocate memory for the copy of name.");
+                        return NULL;
+                    }
+                    memcpy(buf, name, name_len);
+                    buf[name_len] = 0;
+                }
+
+                /* build the tuple and put it in the list */
+                /* we could use PyString_FromStringAndSize in the cases where we normally copy the name,
+                 * but not in the others. */
+                pybuf = PyString_FromString(buf);
+                free(buf);
+                if (pybuf == NULL)
+                {
+                    /* assuming that the only (or at least by far most likely) reason for this is
+                     * running out of memory */
+                    PyErr_SetString(PyExc_MemoryError, "Failed to create new string.");
+                    return NULL;
+                }
+                tuple = PyTuple_Pack(2, PyInt_FromLong(gen_name->type), pybuf);
+                if (tuple == NULL)
+                {
+                    /* assuming that the only (or at least by far most likely) reason for this is
+                     * running out of memory */
+                    PyErr_SetString(PyExc_MemoryError, "Failed to create new tuple.");
+                    return NULL;
+                }
+                if (PyList_Append(result, tuple) == -1)
+                {
+                    /* the exception was already set, according to the Python docs */
+                    return NULL;
+                }
+            }
+            sk_GENERAL_NAME_free(alt_names);
+            return result;
+        }
+    }
+
+    /* no subjectAltName extension */
+    Py_RETURN_NONE;
+}
+
+
+
 /*
  * ADD_METHOD(name) expands to a correct PyMethodDef declaration
  *   {  'name', (PyCFunction)crypto_X509_name, METH_VARARGS }
@@ -765,6 +893,7 @@ static PyMethodDef crypto_X509_methods[] =
     ADD_METHOD(add_extensions),
     ADD_METHOD(get_extension),
     ADD_METHOD(get_extension_count),
+    ADD_METHOD(get_subject_alt_name),
     { NULL, NULL }
 };
 #undef ADD_METHOD
