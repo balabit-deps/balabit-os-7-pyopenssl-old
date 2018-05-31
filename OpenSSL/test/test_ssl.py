@@ -184,7 +184,7 @@ class ContextTests(TestCase, _LoopbackMixin):
         L{Context} can be instantiated with one of L{SSLv2_METHOD},
         L{SSLv3_METHOD}, L{SSLv23_METHOD}, or L{TLSv1_METHOD}.
         """
-        for meth in [SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD]:
+        for meth in [SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD]:
             Context(meth)
         self.assertRaises(TypeError, Context, "")
         self.assertRaises(ValueError, Context, 10)
