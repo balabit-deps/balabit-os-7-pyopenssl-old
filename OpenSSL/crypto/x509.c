@@ -521,6 +521,41 @@ crypto_X509_gmtime_adj_notAfter(crypto_X509Obj *self, PyObject *args)
     return Py_None;
 }
 
+
+static char crypto_X509_get_signature_algorithm_doc[] = "\n\
+Retrieve the signature algorithm used in the certificate\n\
+\n\
+@return: A byte string giving the short name of the signature algorithm used in\n\
+         the certificate.\n\
+@raise ValueError: If the signature algorithm is undefined.\n\
+";
+
+/* BEWARE: this function differs form the one in upstream.
+   It returns the short name of the signature algorithm
+   instead of the long name. This is necessary for the
+   alias algorithm names to work, as only the short name
+   aliases are registered in openssl. See bug #27571.
+   You have been warned! */
+
+static PyObject *
+crypto_X509_get_signature_algorithm(crypto_X509Obj *self, PyObject *args) {
+    ASN1_OBJECT *alg;
+    int nid;
+
+    if (!PyArg_ParseTuple(args, ":get_signature_algorithm")) {
+        return NULL;
+    }
+
+    alg = self->x509->cert_info->signature->algorithm;
+    nid = OBJ_obj2nid(alg);
+    if (nid == NID_undef) {
+        PyErr_SetString(PyExc_ValueError, "Undefined signature algorithm");
+        return NULL;
+    }
+    return PyBytes_FromString(OBJ_nid2sn(nid));
+}
+
+
 static char crypto_X509_sign_doc[] = "\n\
 Sign the certificate using the supplied key and digest\n\
 \n\
@@ -1017,6 +1052,7 @@ static PyMethodDef crypto_X509_methods[] =
     ADD_METHOD(set_notAfter),
     ADD_METHOD(gmtime_adj_notBefore),
     ADD_METHOD(gmtime_adj_notAfter),
+    ADD_METHOD(get_signature_algorithm),
     ADD_METHOD(sign),
     ADD_METHOD(has_expired),
     ADD_METHOD(subject_name_hash),
