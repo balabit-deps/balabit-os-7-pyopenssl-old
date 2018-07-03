@@ -1,3 +1,12 @@
+pyopenssl-old (0.12-1ubuntu2.1bb58.bionic2) bionic; urgency=medium
+
+  * Balabit patched version
+  * Port to OpenSSL 1.1
+  * Remove SSL module
+  * Fix test suit
+
+ -- Balabit Core Team devnull@dev.null>  Fri, 06 Jul 2018 13:51:39 +0200
+
 pyopenssl-old (0.12-1ubuntu2.1bb50.xenial3) xenial; urgency=medium
 
   * Balabit patched version
