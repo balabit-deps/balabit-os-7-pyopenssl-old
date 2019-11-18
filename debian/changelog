@@ -1,3 +1,9 @@
+pyopenssl-old (0.12-1ubuntu2.1bb58.bionic3) bionic; urgency=medium
+
+  * Call dh_installdocs target to put copyright into the package
+
+ -- Platform Team <devnull@dev.null>  Mon, 18 Nov 2019 11:13:48 +0100
+
 pyopenssl-old (0.12-1ubuntu2.1bb58.bionic2) bionic; urgency=medium
 
   * Balabit patched version
